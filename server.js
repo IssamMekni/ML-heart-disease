@@ -10,51 +10,64 @@ app.use(express.static("public"))
 app.get("/hello",(req,res)=>{
     res.send("hi ! this is heart disease predictor");
 })
-
 app.post('/predict', (req, res) => {
     try {
-        // Extraire les données envoyées par l'utilisateur
+        // Extract features sent by the user
         const features = req.body.features;
 
-        // Vérifier si les features sont envoyées correctement
-        if (!features || Object.keys(features).length === 0) {
-            return res.status(400).send('No features provided');
+        // Validate if 'features' is an object and has the required keys
+        const requiredKeys = [
+            "age", "sex", "cp", "trestbps", "chol",
+            "fbs", "restecg", "thalach", "exang",
+            "oldpeak", "slope", "ca", "thal"
+        ];
+
+        // Check if features are provided and are not undefined/null
+        if (!features || typeof features !== 'object') {
+            return res.status(400).json({ error: 'Invalid input: Features object is missing or invalid' });
         }
 
-        // Lancer le script Python en utilisant spawn
+        // Validate each key in the features object
+        for (const key of requiredKeys) {
+            if (!(key in features) || features[key] === undefined || features[key] === null || isNaN(features[key])) {
+                return res.status(400).json({ error: `Invalid value for feature: ${key}` });
+            }
+        }
+
+        // Launch the Python script using spawn
         const python = spawn('python3', ['script.py']);
 
-        // Envoyer les données de features au script Python via stdin
+        // Send features to the Python script via stdin
         python.stdin.write(JSON.stringify(features));
         python.stdin.end();
 
-        // Récupérer la sortie du script Python
+        // Handle the Python script output
         python.stdout.on('data', (data) => {
             const prediction = data.toString().trim();
             res.json({ prediction });
         });
 
-        // Gestion des erreurs du script Python
+        // Handle errors from the Python script
         python.stderr.on('data', (data) => {
             const errorMessage = data.toString();
             console.error(`stderr: ${errorMessage}`);
             res.status(500).json({ error: 'Error executing Python script', details: errorMessage });
         });
-        
 
-        // Vérifier la fermeture du processus Python
+        // Handle process closure
         python.on('close', (code) => {
             if (code !== 0) {
                 console.error(`Python script exited with code ${code}`);
-                res.status(500).send('Python script failed');
+                res.status(500).json({ error: 'Python script failed to execute' });
             }
         });
     } catch (error) {
-        // Gestion des erreurs côté serveur
-        console.error('Error in /predict route:', error);
-        res.status(500).send('Internal Server Error');
+        // Handle server-side errors
+        console.error('Server error in /predict route:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 
 app.listen(port, () => {
