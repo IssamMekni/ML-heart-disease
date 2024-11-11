@@ -24,12 +24,14 @@ app.post('/predict', (req, res) => {
 
         // Check if features are provided and are not undefined/null
         if (!features || typeof features !== 'object') {
+            console.log(json({ error: 'Invalid input: Features object is missing or invalid' }));
             return res.status(400).json({ error: 'Invalid input: Features object is missing or invalid' });
         }
 
         // Validate each key in the features object
         for (const key of requiredKeys) {
             if (!(key in features) || features[key] === undefined || features[key] === null || isNaN(features[key])) {
+                console.log(json({ error: `Invalid value for feature: ${key}` }));
                 return res.status(400).json({ error: `Invalid value for feature: ${key}` });
             }
         }
