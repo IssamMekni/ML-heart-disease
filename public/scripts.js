@@ -1,7 +1,12 @@
+// Determine the API URL based on the hostname
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/predict' : 'https://ml-heart-disease-kii3.onrender.com/predict';
+
+
 document.getElementById('predictBtn').addEventListener('click', async () => {
     const loading = document.getElementById('loading');
     const resultLabel = document.getElementById('resultLabel');
     const predictBtn = document.getElementById('predictBtn');
+    
 
     // Afficher le cercle de chargement et désactiver le bouton
     loading.style.display = 'block';
@@ -23,11 +28,13 @@ document.getElementById('predictBtn').addEventListener('click', async () => {
         slope: parseInt(document.getElementById('slope').value),
         ca: parseInt(document.getElementById('ca').value),
         thal: parseInt(document.getElementById('thal').value),
+
+
     };
 
     try {
         // Envoyer la requête POST à l'API
-        const response = await fetch('http://localhost:3000/predict', {
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

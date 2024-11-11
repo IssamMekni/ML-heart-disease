@@ -1,7 +1,11 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const app = express();
-const port = 3000;
+
+require('dotenv').config();
+
+const PORT = process.env.PORT;
+const API_URL = process.env.API_URL;
 
 // Middleware pour parser le corps de la requête
 app.use(express.json());
@@ -72,6 +76,6 @@ app.post('/predict', (req, res) => {
 
 
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Server running at ${API_URL}:${PORT}`);
 });
